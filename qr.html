@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Codigos QR de furgonetas</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="config.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+    <style>
+      .qr-layout {
+        display: grid;
+        gap: 20px;
+        margin-top: 20px;
+      }
+
+      .qr-toolbar {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 12px;
+        align-items: end;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 16px;
+        box-shadow: var(--shadow);
+      }
+
+      .qr-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 16px;
+      }
+
+      .qr-card {
+        display: grid;
+        gap: 12px;
+        justify-items: center;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 18px;
+        text-align: center;
+        box-shadow: var(--shadow);
+      }
+
+      .qr-card img {
+        width: 180px;
+        height: 180px;
+        image-rendering: crisp-edges;
+      }
+
+      .qr-card h2 {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+
+      .qr-card p,
+      .qr-card a {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.85rem;
+        overflow-wrap: anywhere;
+      }
+
+      .secondary-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 46px;
+        padding: 0 14px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #ffffff;
+        color: var(--ink);
+        font-weight: 800;
+        text-decoration: none;
+      }
+
+      @media (max-width: 760px) {
+        .qr-toolbar {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media print {
+        body {
+          background: #ffffff;
+        }
+
+        .top-band,
+        .qr-toolbar {
+          display: none;
+        }
+
+        .app-shell {
+          width: 100%;
+          padding: 0;
+        }
+
+        .qr-card {
+          box-shadow: none;
+          break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="top-band">
+        <div class="brand-line">
+          <span id="qrCompanyName">Mi empresa</span>
+          <a class="qr-link" href="index.html">
+            <i data-lucide="arrow-left"></i>
+            Registro
+          </a>
+        </div>
+        <div class="vehicle-head">
+          <div>
+            <p class="eyebrow">Codigos QR</p>
+            <h1>Furgonetas</h1>
+            <p class="plate-text">Un enlace unico por vehiculo</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="qr-layout">
+        <div class="qr-toolbar">
+          <label class="field">
+            <span>URL publica de GitHub Pages</span>
+            <input id="baseUrl" type="url" placeholder="https://usuario.github.io/repositorio/">
+          </label>
+          <button id="refreshQr" class="secondary-button" type="button">
+            <i data-lucide="refresh-cw"></i>
+            Actualizar
+          </button>
+          <button class="primary-button" type="button" onclick="window.print()">
+            <i data-lucide="printer"></i>
+            Imprimir
+          </button>
+        </div>
+        <div id="qrGrid" class="qr-grid"></div>
+      </section>
+    </main>
+
+    <script>
+      (function () {
+        const config = window.FLEET_CONFIG || {};
+        const vans = Array.isArray(config.vans) ? config.vans : [];
+        const els = {
+          companyName: document.getElementById("qrCompanyName"),
+          baseUrl: document.getElementById("baseUrl"),
+          refreshQr: document.getElementById("refreshQr"),
+          qrGrid: document.getElementById("qrGrid")
+        };
+
+        els.companyName.textContent = config.companyName || "Mi empresa";
+        els.baseUrl.value = localStorage.getItem("fleetBaseUrl") || defaultBaseUrl();
+        els.refreshQr.addEventListener("click", render);
+        els.baseUrl.addEventListener("change", render);
+        render();
+
+        window.addEventListener("load", () => {
+          if (window.lucide) {
+            window.lucide.createIcons();
+          }
+        });
+
+        function render() {
+          localStorage.setItem("fleetBaseUrl", els.baseUrl.value.trim());
+          els.qrGrid.innerHTML = "";
+
+          vans.forEach((van) => {
+            const url = buildVehicleUrl(els.baseUrl.value, van.id);
+            const card = document.createElement("article");
+            card.className = "qr-card";
+            card.innerHTML = `
+              <img alt="QR ${escapeHtml(van.label || van.id)}" src="${qrImageUrl(url)}">
+              <h2>${escapeHtml(van.label || van.id)}</h2>
+              <p>${escapeHtml(van.plate || van.id)}</p>
+              <a href="${url}" target="_blank" rel="noreferrer">${url}</a>
+            `;
+            els.qrGrid.appendChild(card);
+          });
+        }
+
+        function defaultBaseUrl() {
+          if (window.location.protocol === "file:") {
+            return "";
+          }
+          return new URL("index.html", window.location.href).toString();
+        }
+
+        function buildVehicleUrl(base, vanId) {
+          const raw = (base || "").trim();
+          const normalizedBase = raw.endsWith(".html") ? raw : `${raw.replace(/\/?$/, "/")}index.html`;
+          const url = new URL(normalizedBase || "index.html", window.location.href);
+          url.searchParams.set("van", vanId);
+          return url.toString();
+        }
+
+        function qrImageUrl(value) {
+          const data = encodeURIComponent(value);
+          return `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=14&data=${data}`;
+        }
+
+        function escapeHtml(value) {
+          return String(value || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+        }
+      })();
+    </script>
+  </body>
+</html>
