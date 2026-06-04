@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Registro de vehiculos</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="fleet-data.js"></script>
+    <script src="config.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="top-band">
+        <div class="brand-line">
+          <img class="brand-logo" src="logo-yomee.png" alt="Yomee Energy Services">
+          <a class="qr-link" href="qr.html" aria-label="Generar codigos QR">
+            <i data-lucide="qr-code"></i>
+            QR
+          </a>
+        </div>
+
+        <div class="vehicle-head">
+          <div>
+            <p class="eyebrow">Vehiculo seleccionado</p>
+            <h1 id="vehicleTitle">Selecciona una furgoneta</h1>
+            <p id="vehiclePlate" class="plate-text">Sin matricula</p>
+          </div>
+          <div id="statusBadge" class="status-badge muted">Sin estado</div>
+        </div>
+      </section>
+
+      <section class="content-grid">
+        <form id="usageForm" class="form-panel" autocomplete="off">
+          <label class="field">
+            <span>Vehiculo</span>
+            <select id="vanSelect" name="van" required></select>
+          </label>
+
+          <div class="action-toggle" role="group" aria-label="Tipo de registro">
+            <button class="toggle-button active" type="button" data-action="pickup">
+              <i data-lucide="key-round"></i>
+              En curso
+            </button>
+            <button class="toggle-button" type="button" data-action="return">
+              <i data-lucide="undo-2"></i>
+              Devolver
+            </button>
+          </div>
+
+          <label class="field">
+            <span>Codigo operario</span>
+            <input id="driverCode" name="driverCode" type="text" inputmode="numeric" maxlength="3" list="operatorCodeList" placeholder="000" autocomplete="off" required>
+            <datalist id="operatorCodeList"></datalist>
+          </label>
+
+          <label class="field">
+            <span>Operario</span>
+            <input id="driverName" name="driverName" type="text" list="operatorNameList" placeholder="Nombre del operario" autocomplete="off" required>
+            <datalist id="operatorNameList"></datalist>
+          </label>
+
+          <label class="field">
+            <span>DNI firma</span>
+            <input id="driverDni" name="driverDni" type="text" autocomplete="off" placeholder="DNI del operario" required>
+          </label>
+
+          <label class="field">
+            <span>Kilometros</span>
+            <input id="odometer" name="odometer" type="number" min="0" step="1" inputmode="numeric" placeholder="Opcional">
+          </label>
+
+          <label class="field">
+            <span>Notas</span>
+            <textarea id="notes" name="notes" rows="4" placeholder="Incidencias, combustible, limpieza..."></textarea>
+          </label>
+
+          <button id="submitButton" class="primary-button" type="submit">
+            <i data-lucide="save"></i>
+            Guardar registro
+          </button>
+        </form>
+
+        <aside class="side-panel">
+          <div>
+            <p class="eyebrow">Hora del dispositivo</p>
+            <p id="clockText" class="clock-text">--:--</p>
+          </div>
+          <div class="divider"></div>
+          <div>
+            <p class="eyebrow">Ultimo movimiento</p>
+            <p id="lastMovement" class="movement-text">Pendiente de sincronizar</p>
+          </div>
+          <div class="divider"></div>
+          <div>
+            <p class="eyebrow">Registro abierto</p>
+            <p id="openMovement" class="movement-text">Ninguno</p>
+          </div>
+          <div id="messageBox" class="message-box" role="status" aria-live="polite"></div>
+        </aside>
+      </section>
+    </main>
+  </body>
+</html>
